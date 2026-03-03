@@ -5,7 +5,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import { chatLimiter } from "./middleware.js";
-import { uploadToBlob } from "./storage.js";
 import {
   addMessage,
   getMessageHistory,
@@ -275,6 +274,7 @@ app.post("/api/admin/content/upload", requireAuth, requireAdmin, upload.single("
 
   let uploaded;
   try {
+    const { uploadToBlob } = await import("./storage.js");
     uploaded = await uploadToBlob({
       buffer: req.file.buffer,
       originalName: req.file.originalname,
