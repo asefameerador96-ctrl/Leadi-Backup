@@ -5,16 +5,6 @@ const containerName = process.env.AZURE_STORAGE_CONTAINER || "app-content";
 
 let containerClient;
 
-function buildClientFromConnectionString() {
-  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-  if (!connectionString) {
-    return null;
-  }
-
-  const serviceClient = BlobServiceClient.fromConnectionString(connectionString);
-  return serviceClient.getContainerClient(containerName);
-}
-
 function buildClientFromManagedIdentity() {
   const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
   if (!accountName) {
@@ -31,12 +21,16 @@ export async function getContainerClient() {
     return containerClient;
   }
 
-  const client = buildClientFromManagedIdentity() || buildClientFromConnectionString();
+  const client = buildClientFromManagedIdentity();
   if (!client) {
-    throw new Error("Azure Blob configuration missing. Set AZURE_STORAGE_CONNECTION_STRING or AZURE_STORAGE_ACCOUNT_NAME.");
+    throw new Error("Azure Blob configuration missing. Set AZURE_STORAGE_ACCOUNT_NAME and AZURE_STORAGE_CONTAINER.");
   }
 
-  await client.createIfNotExists({ access: "blob" });
+  const exists = await client.exists();
+  if (!exists) {
+    throw new Error(`Azure Blob container '${containerName}' does not exist.`);
+  }
+
   containerClient = client;
   return containerClient;
 }

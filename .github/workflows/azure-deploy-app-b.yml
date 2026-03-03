@@ -83,7 +83,6 @@ jobs:
 
             set_setting_if_present "N8N_WEBHOOK_URL" '${{ secrets.N8N_WEBHOOK_URL }}'
             set_setting_if_present "CORS_ORIGIN" '${{ secrets.CORS_ORIGIN }}'
-            set_setting_if_present "AZURE_STORAGE_CONNECTION_STRING" '${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}'
             set_setting_if_present "AZURE_STORAGE_CONTAINER" '${{ secrets.AZURE_STORAGE_CONTAINER }}'
             set_setting_if_present "AZURE_STORAGE_ACCOUNT_NAME" '${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}'
 
