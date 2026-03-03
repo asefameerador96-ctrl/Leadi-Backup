@@ -2,10 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import fs from "fs";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import { chatLimiter } from "./middleware.js";
+import { uploadToBlob } from "./storage.js";
 import {
   addMessage,
   getMessageHistory,
@@ -38,24 +38,9 @@ const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, "../public");
-const uploadRoot = process.env.CONTENT_UPLOAD_DIR || "/home/site/uploads";
-
-if (!fs.existsSync(uploadRoot)) {
-  fs.mkdirSync(uploadRoot, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadRoot);
-  },
-  filename: (_req, file, cb) => {
-    const safeBase = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
-    cb(null, `${Date.now()}-${safeBase}`);
-  },
-});
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024,
   },
@@ -69,7 +54,6 @@ if (!N8N_WEBHOOK_URL) {
 app.use(express.json());
 app.use(cors());
 app.use(express.static(publicDir));
-app.use("/uploads", express.static(uploadRoot));
 
 const toSafeUser = (user) => ({
   id: String(user.id),
@@ -275,7 +259,7 @@ app.get("/api/admin/content/assets", requireAuth, requireAdmin, (req, res) => {
   return res.json({ assets });
 });
 
-app.post("/api/admin/content/upload", requireAuth, requireAdmin, upload.single("file"), (req, res) => {
+app.post("/api/admin/content/upload", requireAuth, requireAdmin, upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
@@ -289,7 +273,19 @@ app.post("/api/admin/content/upload", requireAuth, requireAdmin, upload.single("
     assetType = "csv";
   }
 
-  const storageUrl = `/uploads/${req.file.filename}`;
+  let uploaded;
+  try {
+    uploaded = await uploadToBlob({
+      buffer: req.file.buffer,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    });
+  } catch (error) {
+    console.error("Blob upload failed:", error);
+    return res.status(500).json({ error: "Failed to upload file to Azure Blob Storage" });
+  }
+
+  const storageUrl = uploaded.url;
 
   const assetId = addMediaAsset({
     assetType,
