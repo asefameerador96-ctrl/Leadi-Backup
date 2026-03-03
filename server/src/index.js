@@ -40,8 +40,12 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
   }
 
   if (!N8N_WEBHOOK_URL) {
-    return res.status(503).json({
-      error: "Chatbot backend is temporarily unavailable",
+    const reply = "Thanks for your message. Chatbot automation is temporarily disabled, but we received your request.";
+    const result = addMessage(userId, text, reply);
+    return res.json({
+      reply,
+      messageId: result.lastID,
+      mocked: true,
     });
   }
 
