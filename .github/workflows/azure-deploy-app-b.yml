@@ -99,6 +99,7 @@ jobs:
 
       - name: Restart App B before retry
         if: steps.deploy_try_1.outcome == 'failure'
+        continue-on-error: true
         uses: azure/cli@v2
         with:
           inlineScript: |
