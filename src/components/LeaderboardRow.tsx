@@ -42,6 +42,9 @@ const LeaderboardRow = ({
       if (normalize(tsoData.territory_code) && normalize(user.territory_code)) {
         return normalize(tsoData.territory_code) === normalize(user.territory_code);
       }
+      if (normalize(tsoData.territory) && normalize(user.territory)) {
+        return normalize(tsoData.territory) === normalize(user.territory);
+      }
       return false;
     }
 

@@ -220,6 +220,9 @@ const canViewBreakdown = (viewer, row) => {
     if (normalize(row.territory_code) && normalize(viewer.territory_code)) {
       return normalize(row.territory_code) === normalize(viewer.territory_code);
     }
+    if (normalize(row.territory) && normalize(viewer.territory)) {
+      return normalize(row.territory) === normalize(viewer.territory);
+    }
     return false;
   }
 
@@ -658,14 +661,13 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
     return res.status(500).json({ error: "ZIP processing not available" });
   }
 
-  let uploadModule;
+  let uploadToBlob = null;
   try {
-    uploadModule = await import("./storage.js");
-  } catch (err) {
-    console.error("Storage not available:", err);
-    return res.status(500).json({ error: "Storage not available" });
+    const uploadModule = await import("./storage.js");
+    uploadToBlob = uploadModule.uploadToBlob;
+  } catch {
+    // Azure Blob not configured; image URLs will be stored as base64 data URLs.
   }
-  const { uploadToBlob } = uploadModule;
 
   try {
     clearTsoImages();
@@ -687,13 +689,23 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
       const buffer = await file.buffer();
       const mimeMap = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml" };
 
-      const uploaded = await uploadToBlob({
-        buffer,
-        originalName: `tso-image-${territoryCode}.${fileExt}`,
-        mimeType: mimeMap[fileExt] || "image/jpeg",
-      });
+      let imageUrl;
+      if (uploadToBlob) {
+        try {
+          const uploaded = await uploadToBlob({
+            buffer,
+            originalName: `tso-image-${territoryCode}.${fileExt}`,
+            mimeType: mimeMap[fileExt] || "image/jpeg",
+          });
+          imageUrl = uploaded.url;
+        } catch {
+          imageUrl = `data:${mimeMap[fileExt] || "image/jpeg"};base64,${buffer.toString("base64")}`;
+        }
+      } else {
+        imageUrl = `data:${mimeMap[fileExt] || "image/jpeg"};base64,${buffer.toString("base64")}`;
+      }
 
-      upsertTsoImage(territoryCode, uploaded.url, baseName);
+      upsertTsoImage(territoryCode, imageUrl, baseName);
       results.uploaded++;
     }
 
