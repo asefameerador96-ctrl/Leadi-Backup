@@ -123,6 +123,7 @@ jobs:
               --resource-group "${{ env.RESOURCE_GROUP }}" \
               --name "${{ env.WEBAPP_NAME }}" \
               --src server.zip \
+              --async true \
               --timeout 1800
 
             DEPLOY_EXIT_CODE=$?
