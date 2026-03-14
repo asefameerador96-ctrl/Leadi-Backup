@@ -119,18 +119,13 @@ jobs:
         uses: azure/cli@v2
         with:
           inlineScript: |
-            set +e
+            set -e
             az webapp deployment source config-zip \
               --resource-group "${{ env.RESOURCE_GROUP }}" \
               --name "${{ env.WEBAPP_NAME }}" \
-              --src server.zip \
-              --async true \
-              --timeout 1800
+              --src server.zip
 
-            DEPLOY_EXIT_CODE=$?
-            echo "ZipDeploy exit code: ${DEPLOY_EXIT_CODE}"
-            echo "Continuing to smoke tests; Kudu may complete deployment asynchronously even when CLI exits non-zero."
-            exit 0
+            echo "ZipDeploy completed successfully"
 
   smoke_test:
     needs: [deploy]
