@@ -17,7 +17,9 @@ on:
       - '.github/workflows/azure-deploy-app-b.yml'
 
 env:
-  NODE_VERSION: '20'
+  # Keep app build/runtime on active LTS while JavaScript actions run on Node 24.
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_TENANT_ID: 3bb447ee-be09-4fd3-9f1c-104fc7776954
   AZURE_SUBSCRIPTION_ID: fdd05880-48dd-46bd-be4c-36f7039e71d7
