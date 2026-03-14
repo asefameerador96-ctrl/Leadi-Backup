@@ -109,10 +109,10 @@ jobs:
               --name "${{ env.WEBAPP_NAME }}" \
               --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false ENABLE_ORYX_BUILD=false >/dev/null
 
-            set_setting_if_present "N8N_WEBHOOK_URL" '${{ secrets.N8N_WEBHOOK_URL }}'
-            set_setting_if_present "CORS_ORIGIN" '${{ secrets.CORS_ORIGIN }}'
-            set_setting_if_present "AZURE_STORAGE_CONTAINER" '${{ secrets.AZURE_STORAGE_CONTAINER }}'
-            set_setting_if_present "AZURE_STORAGE_ACCOUNT_NAME" '${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}'
+            set_setting_if_present "N8N_WEBHOOK_URL" '${{ secrets.APP_B_N8N_WEBHOOK_URL }}'
+            set_setting_if_present "CORS_ORIGIN" '${{ secrets.APP_B_CORS_ORIGIN }}'
+            set_setting_if_present "AZURE_STORAGE_CONTAINER" '${{ secrets.APP_B_AZURE_STORAGE_CONTAINER }}'
+            set_setting_if_present "AZURE_STORAGE_ACCOUNT_NAME" '${{ secrets.APP_B_AZURE_STORAGE_ACCOUNT_NAME }}'
 
       - name: Deploy to Azure Web App (ZipDeploy)
         uses: azure/cli@v2
