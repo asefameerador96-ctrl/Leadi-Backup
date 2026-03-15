@@ -644,22 +644,55 @@ app.post("/api/admin/upload/mgmt-credentials", requireAuth, requireAdmin, upload
   }
 });
 
-// ─── TSO Images Compressed Folder Upload ─────────────────────────────────────
+// ─── TSO Images Compressed Archive Upload (.zip/.rar) ───────────────────────
 
 app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   const ext = req.file.originalname.split(".").pop()?.toLowerCase();
-  if (ext !== "zip") {
-    return res.status(400).json({ error: "Please upload a compressed (zipped) folder (.zip)" });
+  if (ext !== "zip" && ext !== "rar") {
+    return res.status(400).json({ error: "Please upload a compressed archive folder (.zip or .rar)" });
   }
 
-  let unzipper;
-  try {
-    unzipper = await import("unzipper");
-  } catch {
-    return res.status(500).json({ error: "ZIP processing not available" });
-  }
+  const extractArchiveEntries = async () => {
+    if (ext === "zip") {
+      let unzipper;
+      try {
+        unzipper = await import("unzipper");
+      } catch {
+        throw new Error("ZIP processing not available");
+      }
+
+      const directory = await unzipper.Open.buffer(req.file.buffer);
+      const entries = [];
+      for (const file of directory.files) {
+        if (file.type !== "File") continue;
+        entries.push({
+          path: file.path,
+          buffer: await file.buffer(),
+        });
+      }
+      return entries;
+    }
+
+    try {
+      const { createExtractorFromData } = await import("node-unrar-js");
+      const extractor = await createExtractorFromData({
+        data: Uint8Array.from(req.file.buffer).buffer,
+      });
+      const extracted = extractor.extract();
+      const files = [...extracted.files];
+
+      return files
+        .filter((file) => !file.fileHeader.flags.directory && file.extraction)
+        .map((file) => ({
+          path: file.fileHeader.name,
+          buffer: Buffer.from(file.extraction),
+        }));
+    } catch {
+      throw new Error("RAR processing not available or archive is invalid");
+    }
+  };
 
   let uploadToBlob = null;
   try {
@@ -671,13 +704,12 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
 
   try {
     clearTsoImages();
-    const directory = await unzipper.Open.buffer(req.file.buffer);
+    const entries = await extractArchiveEntries();
     const results = { uploaded: 0, skipped: 0 };
     const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
 
-    for (const file of directory.files) {
-      if (file.type !== "File") continue;
-      const pathParts = String(file.path || "").split(/[\\/]+/).filter(Boolean);
+    for (const entry of entries) {
+      const pathParts = String(entry.path || "").split(/[\\/]+/).filter(Boolean);
       const baseName = pathParts[pathParts.length - 1];
       if (!baseName) continue;
       const dotIdx = baseName.lastIndexOf(".");
@@ -690,7 +722,7 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
       const territoryCode = (fromFolder || fromFile).toUpperCase();
       if (!territoryCode) { results.skipped++; continue; }
 
-      const buffer = await file.buffer();
+      const buffer = entry.buffer;
       const mimeMap = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml" };
 
       let imageUrl;
@@ -715,7 +747,7 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
 
     if (results.uploaded === 0) {
       return res.status(400).json({
-        error: "No valid images found in the compressed (zipped) folder. Use DHK001.png or DHK001/photo.png style naming.",
+        error: "No valid images found in the compressed archive folder. Use DHK001.png or DHK001/photo.png style naming.",
         ...results,
       });
     }
@@ -723,7 +755,7 @@ app.post("/api/admin/upload/tso-images", requireAuth, requireAdmin, upload.singl
     return res.json({ success: true, ...results });
   } catch (err) {
     console.error("TSO images upload error:", err);
-    return res.status(500).json({ error: "Failed to process ZIP file" });
+    return res.status(500).json({ error: err?.message || "Failed to process archive file" });
   }
 });
 

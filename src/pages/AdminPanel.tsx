@@ -527,10 +527,10 @@ const AdminPanel = () => {
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
-              TSO Territory Images (Compressed Folder)
+              TSO Territory Images (Compressed Archive Folder)
             </CardTitle>
             <CardDescription>
-              Upload a compressed (zipped) folder of territory images. Supported patterns: <code>DHK001.png</code> or <code>DHK001/photo.png</code>.
+              Upload a compressed archive folder (<code>.zip</code> or <code>.rar</code>) of territory images. Supported patterns: <code>DHK001.png</code> or <code>DHK001/photo.png</code>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -538,14 +538,14 @@ const AdminPanel = () => {
               <div className={`flex items-center justify-center w-full px-6 py-4 border-2 border-dashed rounded-lg transition-colors ${uploadingTsoImages ? "opacity-50 cursor-not-allowed border-border" : "border-border hover:border-primary/50"}`}>
                 <div className="text-center">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="font-medium text-foreground">{uploadingTsoImages ? "Processing compressed (zipped) folder..." : "Click to upload compressed (zipped) folder"}</p>
+                  <p className="font-medium text-foreground">{uploadingTsoImages ? "Processing compressed archive folder..." : "Click to upload compressed archive folder (.zip/.rar)"}</p>
                   <p className="text-sm text-muted-foreground">PNG, JPG, GIF, WebP, SVG supported</p>
                 </div>
               </div>
               <input
                 id="tso-images-upload"
                 type="file"
-                accept=".zip"
+                accept=".zip,.rar"
                 onChange={handleTsoImagesUpload}
                 disabled={uploadingTsoImages}
                 className="hidden"
