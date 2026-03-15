@@ -63,9 +63,10 @@ const TopThreeCard = ({ rank, name, overallPercent, avatar, territory, division,
           </h3>
 
           {/* Territory & Division */}
-          <p className="text-muted-foreground text-sm mb-4">
-            {territory}, {division}
-          </p>
+          <div className="text-muted-foreground text-sm mb-4 text-center leading-5">
+            <p>{territory}</p>
+            <p>{division}</p>
+          </div>
 
           {/* Overall % */}
           <div className="flex items-baseline gap-1">

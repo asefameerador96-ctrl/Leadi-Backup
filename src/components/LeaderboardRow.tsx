@@ -87,7 +87,8 @@ const LeaderboardRow = ({
         </div>
         <div className="min-w-0">
           <span className="font-semibold text-foreground truncate block">{name}</span>
-          <span className="text-muted-foreground text-sm truncate block">{territory}, {division}</span>
+          <span className="text-muted-foreground text-sm truncate block">{territory}</span>
+          <span className="text-muted-foreground text-sm truncate block">{division}</span>
         </div>
       </div>
 
