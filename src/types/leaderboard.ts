@@ -25,11 +25,11 @@ export interface LeaderboardConfig {
 }
 
 export interface CSVRow {
+  "Territory Code"?: string;
   "TSO Name": string;
   "Territory": string;
   "Division": string;
   "Wing": string;
-  "Territory_Code"?: string;
   "Username"?: string;
   "Volume Size": string;
   "Memo Size": string;

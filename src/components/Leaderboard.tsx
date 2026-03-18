@@ -55,8 +55,10 @@ const Leaderboard = () => {
             </p>
             
             {/* Week Badge */}
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-primary/5 border border-primary/10">
-              <span className="text-primary font-medium text-sm">{siteCopy.weekBadge || "Week 3 Rankings"}</span>
+            <div className="flex justify-center items-center gap-2 mb-6">
+              <div className="px-4 py-2 rounded-full bg-primary/5 border border-primary/10">
+                <span className="text-primary font-medium text-sm">{siteCopy.weekBadge || "Week 3 Rankings"}</span>
+              </div>
             </div>
 
             <h1 
