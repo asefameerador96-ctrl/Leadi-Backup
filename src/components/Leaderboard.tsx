@@ -1,29 +1,10 @@
 import TopThreeCard from "./TopThreeCard";
 import LeaderboardRow from "./LeaderboardRow";
 import { useLeaderboard } from "@/context/LeaderboardContext";
-import { useAuth } from "@/context/AuthContext";
 import aktLogo from "@/assets/akt-logo.png";
 
 const Leaderboard = () => {
   const { tsoData, config, logo, backgroundMedia, backgroundMediaType, siteCopy } = useLeaderboard();
-  const { user } = useAuth();
-
-  // Generate identity message based on user role
-  const getIdentityMessage = () => {
-    if (!user) return null;
-
-    if (user.role === "management") {
-      return `Assalamualaikum, ${user.display_name} Sir`;
-    }
-
-    if (user.role === "tso") {
-      return `Welcome, ${user.territory} Territory`;
-    }
-
-    return null;
-  };
-
-  const identityMessage = getIdentityMessage();
 
   // Sort by Overall % and get top 500
   const sortedData = [...tsoData].sort((a, b) => b.overallPercent - a.overallPercent).slice(0, 500);
@@ -69,7 +50,7 @@ const Leaderboard = () => {
             </div>
 
             {/* Company Name */}
-            <p className="text-muted-foreground text-sm tracking-widest uppercase mb-4">
+            <p className="text-white font-semibold text-sm tracking-widest uppercase mb-4 drop-shadow-sm">
               {siteCopy.companyLine || "X Factor Unlocked"}
             </p>
             
@@ -85,21 +66,10 @@ const Leaderboard = () => {
             >
               {siteCopy.mainTitle || "XForce Leaderboard"}
             </h1>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto">
+            <p className="text-white font-semibold text-lg max-w-md mx-auto drop-shadow-sm">
               {siteCopy.subtitle || "Compete with Sales Stars nationally and climb the ranks"}
             </p>
           </div>
-
-          {/* Identity Display - Top Right Corner */}
-          {identityMessage && (
-            <div className="absolute top-4 right-4 md:top-6 md:right-6">
-              <div className="bg-background/90 backdrop-blur-sm border border-border rounded-lg px-4 py-2 shadow-sm">
-                <p className="text-sm font-medium text-foreground">
-                  {identityMessage}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Top 3 Podium */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
