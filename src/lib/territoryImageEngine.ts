@@ -4,6 +4,8 @@
  * keyed by territory code (4-digit numeric string like "1202")
  */
 
+import JSZip from "jszip";
+
 const SUPPORTED_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg"];
 
 interface ExtractedFile {
@@ -17,29 +19,31 @@ interface ExtractedFile {
  */
 async function extractZipFiles(file: File): Promise<ExtractedFile[]> {
   try {
-    const JSZip = require("jszip").default || require("jszip");
     const zip = new JSZip();
-    const loaded = await zip.loadAsync(file);
-    
+    const arrayBuffer = await file.arrayBuffer();
+    const loaded = await zip.loadAsync(arrayBuffer);
+
     const files: ExtractedFile[] = [];
     const promises: Promise<void>[] = [];
-    
+
     loaded.forEach((relativePath: string, zipEntry: any) => {
       // Skip directories and files in nested folders deeper than 1 level
       if (zipEntry.dir) return;
-      
-      const pathParts = relativePath.split("/").filter((p: string) => p);
+
+      // Support both / and \ separators for path segments
+      const normalizedPath = relativePath.replace(/\\/g, "/");
+      const pathParts = normalizedPath.split("/").filter((p: string) => p);
       if (pathParts.length > 2) return; // Skip if more than 1 level deep
-      
+
       const fileName = pathParts[pathParts.length - 1];
-      
+
       promises.push(
         zipEntry.async("blob").then((data: Blob) => {
           files.push({ name: fileName, data });
         })
       );
     });
-    
+
     await Promise.all(promises);
     return files;
   } catch (error) {
