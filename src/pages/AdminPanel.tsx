@@ -18,7 +18,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import aktLogo from "@/assets/akt-logo.png";
 import { parseCSV, downloadCSVTemplate } from "@/lib/csvParser";
-import { processTerritoryImageArchive, mergeTerritoryImagesToTSO } from "@/lib/territoryImageEngine";
 
 const AdminPanel = () => {
   const {
@@ -270,25 +269,7 @@ const AdminPanel = () => {
 
     setUploadingTsoImages(true);
     try {
-      // First, process the archive client-side to extract territory images
-      const territoryImageMap = await processTerritoryImageArchive(file);
-      const extractedCount = Object.keys(territoryImageMap).length;
-      
-      if (extractedCount === 0) {
-        toast.warning("No territory images found in the archive");
-        setUploadingTsoImages(false);
-        return;
-      }
-      
-      // Merge territory images into current TSO data (updates avatars based on territory_code)
-      const updatedTsoData = [...tsoData];
-      mergeTerritoryImagesToTSO(updatedTsoData, territoryImageMap);
-      
-      // Update context and persist
-      setTsoData(updatedTsoData);
-      await saveTsoData(updatedTsoData);
-      
-      // Also upload archive to backend for backup/persistence
+      // Upload archive to backend for processing and storage
       const formData = new FormData();
       formData.append("file", file);
       const response = await fetch(`${backendUrl}/api/admin/upload/tso-images`, {
@@ -296,16 +277,26 @@ const AdminPanel = () => {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      
-      const data = await response.json();
-      
+
       if (!response.ok) {
-        console.warn("Backend upload warning:", data.error || "Upload may have partial issues");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload territory images");
       }
-      
-      toast.success(`Successfully extracted and applied ${extractedCount} territory images to ${updatedTsoData.filter(t => t.avatar).length} TSOs`);
+
+      const data = await response.json();
+      toast.success(`Successfully uploaded ${data.uploaded} territory images`);
+
+      // Reload the tsoImages from backend
+      const publicResponse = await fetch(`${backendUrl}/api/content/public`);
+      if (publicResponse.ok) {
+        const publicData = await publicResponse.json();
+        if (publicData.tsoImages && typeof publicData.tsoImages === "object") {
+          setTsoImages(publicData.tsoImages);
+        }
+      }
+
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to process territory images");
+      toast.error(error instanceof Error ? error.message : "Failed to upload territory images");
       console.error("Territory image upload error:", error);
     } finally {
       setUploadingTsoImages(false);

@@ -3,6 +3,7 @@ import RankBadge from "./RankBadge";
 import { TSOData } from "@/types/leaderboard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Info } from "lucide-react";
+import { useLeaderboard } from "@/context/LeaderboardContext";
 
 interface TopThreeCardProps {
   rank: 1 | 2 | 3;
@@ -15,7 +16,11 @@ interface TopThreeCardProps {
 }
 
 const TopThreeCard = ({ rank, name, overallPercent, avatar, territory, division, tsoData }: TopThreeCardProps) => {
+  const { tsoImages } = useLeaderboard();
   const isFirst = rank === 1;
+
+  const resolvedAvatar =
+    (tsoData.territory_code ? tsoImages[tsoData.territory_code] : undefined) || avatar;
 
   return (
     <Popover>
@@ -40,7 +45,7 @@ const TopThreeCard = ({ rank, name, overallPercent, avatar, territory, division,
             rank === 3 && "border-bronze"
           )}>
             <img
-              src={avatar}
+              src={resolvedAvatar}
               alt={name}
               className="w-full h-full object-cover bg-muted"
             />
