@@ -23,6 +23,8 @@ const AdminPanel = () => {
   const {
     tsoData,
     setTsoData,
+    tsoImages,
+    setTsoImages,
     logo,
     setLogo,
     backgroundMedia,
